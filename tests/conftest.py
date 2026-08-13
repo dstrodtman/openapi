@@ -1,3 +1,4 @@
+import io
 import os
 import pathlib
 import textwrap
@@ -45,7 +46,7 @@ def run_sphinx(tmpdir):
     src = tmpdir.ensure('src', dir=True)
     out = tmpdir.ensure('out', dir=True)
 
-    def run(spec, options={}):
+    def run(spec, options={}, directive='openapi'):
         options_raw = '\n'.join([
             '   %s' % _format_option_raw(key, val)
             for key, val in options.items()])
@@ -64,16 +65,22 @@ def run_sphinx(tmpdir):
             encoding='utf-8')
 
         src.join('index.rst').write_text(
-            '.. openapi:: %s\n%s' % (spec, options_raw),
+            '.. %s:: %s\n%s' % (directive, spec, options_raw),
             encoding='utf-8')
+
+        # Warnings are captured and returned so tests can assert on them.
+        warning = io.StringIO()
 
         Sphinx(
             srcdir=src.strpath,
             confdir=src.strpath,
             outdir=out.strpath,
             doctreedir=out.join('.doctrees').strpath,
-            buildername='html'
+            buildername='html',
+            warning=warning
         ).build()
+
+        return warning.getvalue()
 
     yield run
 
