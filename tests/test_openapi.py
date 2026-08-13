@@ -7,6 +7,7 @@
     :copyright: (c) 2016, Ihor Kalnytskyi.
     :license: BSD, see LICENSE for details.
 """
+import datetime
 import json
 import os
 import textwrap
@@ -1691,6 +1692,156 @@ class TestOpenApi3HttpDomain(object):
 
                :status 201:
                   ok
+        ''').lstrip()
+
+    def test_example_from_enum_schema(self):
+        renderer = renderers.HttpdomainOldRenderer(None, {'examples': True})
+        text = '\n'.join(renderer.render_restructuredtext_markup({
+            'openapi': '3.0.0',
+            'paths': {
+                '/things': {
+                    'get': {
+                        'summary': 'Get Thing',
+                        'responses': {
+                            '200': {
+                                'description': 'A thing.',
+                                'content': {
+                                    'application/json': {
+                                        'schema': {
+                                            'type': 'string',
+                                            'enum': ['PENDING', 'DONE'],
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        }))
+        assert '"PENDING"' in text
+
+    def test_example_from_datetime(self):
+        renderer = renderers.HttpdomainOldRenderer(None, {'examples': True})
+        text = '\n'.join(renderer.render_restructuredtext_markup({
+            'openapi': '3.0.0',
+            'paths': {
+                '/things': {
+                    'get': {
+                        'summary': 'Get Thing',
+                        'responses': {
+                            '200': {
+                                'description': 'A thing.',
+                                'content': {
+                                    'application/json': {
+                                        'schema': {
+                                            'type': 'object',
+                                            'properties': {
+                                                'created': {
+                                                    'type': 'string',
+                                                    'format': 'date-time',
+                                                },
+                                            },
+                                            'example': {
+                                                'created': datetime.datetime(
+                                                    2000, 1, 23, 4, 56, 7),
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        }))
+        assert '"created": "2000-01-23T04:56:07"' in text
+
+    def test_example_all_readonly_properties(self):
+        renderer = renderers.HttpdomainOldRenderer(None, {'examples': True})
+        text = '\n'.join(renderer.render_restructuredtext_markup({
+            'openapi': '3.0.0',
+            'paths': {
+                '/things': {
+                    'post': {
+                        'summary': 'Create Thing',
+                        'requestBody': {
+                            'content': {
+                                'application/json': {
+                                    'schema': {
+                                        'type': 'object',
+                                        'properties': {
+                                            'id': {
+                                                'type': 'string',
+                                                'readOnly': True,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        'responses': {
+                            '200': {
+                                'description': 'A thing created.',
+                            },
+                        },
+                    },
+                },
+            },
+        }))
+        assert text == textwrap.dedent('''
+            .. http:post:: /things
+               :synopsis: Create Thing
+
+               **Create Thing**
+
+               :status 200:
+                  A thing created.
+        ''').lstrip()
+
+
+class TestOpenApi31HttpDomain(object):
+
+    def test_example_all_readonly_properties(self):
+        renderer = renderers.HttpdomainOldRenderer(None, {'examples': True})
+        text = '\n'.join(renderer.render_restructuredtext_markup({
+            'openapi': '3.1.0',
+            'paths': {
+                '/things': {
+                    'post': {
+                        'summary': 'Create Thing',
+                        'requestBody': {
+                            'content': {
+                                'application/json': {
+                                    'schema': {
+                                        'type': 'object',
+                                        'properties': {
+                                            'id': {
+                                                'type': 'string',
+                                                'readOnly': True,
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                        'responses': {
+                            '200': {
+                                'description': 'A thing created.',
+                            },
+                        },
+                    },
+                },
+            },
+        }))
+        assert text == textwrap.dedent('''
+            .. http:post:: /things
+               :synopsis: Create Thing
+
+               **Create Thing**
+
+               :status 200:
+                  A thing created.
         ''').lstrip()
 
 

@@ -13,7 +13,7 @@ import copy
 import collections
 import collections.abc
 
-from datetime import datetime
+from datetime import date, datetime, time
 import itertools
 import json
 import re
@@ -55,6 +55,27 @@ _TYPE_MAPPING = {
 }
 
 _READONLY_PROPERTY = object()  # sentinel for values not included in requests
+
+
+def _json_default(value):
+    """Render values :mod:`json` cannot serialize on its own.
+
+    Reached for values that come out of a schema or a YAML example rather
+    than out of JSON, where types :mod:`json` has no encoding for are
+    possible. Rendering one is always better than failing the build.
+    """
+    if value is _READONLY_PROPERTY:
+        return None
+
+    if isinstance(value, (date, datetime, time)):
+        return value.isoformat()
+
+    return str(value)
+
+
+def _dumps(value):
+    """Serialize a Python value as the JSON document of an example body."""
+    return json.dumps(value, indent=4, separators=(",", ": "), default=_json_default)
 
 
 def _dict_merge(dct, merge_dct):
@@ -218,6 +239,16 @@ def _example(media_type_objects, method=None, endpoint=None, status=None, nb_ind
                     continue
                 example = _parse_schema(content["schema"], method=method)
 
+                if example is _READONLY_PROPERTY:
+                    # Nothing in the schema is part of a request, so there's
+                    # no body to show.
+                    continue
+
+                # A schema-derived example is a JSON document rather than a
+                # literal value, so encode it here. Author-supplied examples
+                # are left alone and handled below.
+                example = _dumps(example)
+
             if method is None:
                 examples["Example response"] = {
                     "value": example,
@@ -230,9 +261,7 @@ def _example(media_type_objects, method=None, endpoint=None, status=None, nb_ind
         for example in examples.values():
             # According to OpenAPI v3 specs, string examples should be left unchanged
             if not isinstance(example["value"], str):
-                example["value"] = json.dumps(
-                    example["value"], indent=4, separators=(",", ": ")
-                )
+                example["value"] = _dumps(example["value"])
 
         for example_name, example in examples.items():
             if "summary" in example:
