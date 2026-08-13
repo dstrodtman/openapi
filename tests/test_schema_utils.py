@@ -202,6 +202,47 @@ from sphinxcontrib.openapi.schema_utils import example_from_schema
         pytest.param(
             {
                 "type": "object",
+                "properties": {
+                    "timestamp": {
+                        "allOf": [{"type": "string", "example": "2020-01-01T01:01:01Z"}]
+                    },
+                    "status": {
+                        "description": "The status of the job.",
+                        "allOf": [{"type": "string", "enum": ["PENDING", "RUNNING"]}],
+                    },
+                    "count": {"allOf": [{"type": "integer"}]},
+                    "tags": {"allOf": [{"type": "array", "items": {"type": "string"}}]},
+                },
+            },
+            {
+                "timestamp": "2020-01-01T01:01:01Z",
+                "status": "PENDING",
+                "count": 1,
+                "tags": ["string", "string"],
+            },
+            id="allOf_of_non_object",
+        ),
+        pytest.param(
+            {
+                "type": "object",
+                "properties": {
+                    "annotated": {
+                        "allOf": [
+                            {
+                                "type": "object",
+                                "properties": {"one": {"type": "string"}},
+                            },
+                            {"description": "this only annotates the schema above"},
+                        ]
+                    },
+                },
+            },
+            {"annotated": {"one": "string"}},
+            id="allOf_with_annotation_only_subschema",
+        ),
+        pytest.param(
+            {
+                "type": "object",
                 "properties": {"anything": {"description": "this can be anything"}},
             },
             {"anything": 1},

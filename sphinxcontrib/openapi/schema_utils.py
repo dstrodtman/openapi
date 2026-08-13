@@ -21,6 +21,13 @@ _DEFAULT_STRING_EXAMPLES = {
 }
 
 
+# Keywords an example can possibly be derived from. A schema that has none of
+# them carries annotations only, and thus contributes no example.
+_EXAMPLE_KEYWORDS = frozenset(
+    ["example", "oneOf", "anyOf", "allOf", "enum", "type", "properties", "items"]
+)
+
+
 def example_from_schema(schema):
     """
     Generates an example request/response body from the provided schema.
@@ -63,7 +70,21 @@ def example_from_schema(schema):
         # Combine schema examples
         example = {}
         for sub_schema in schema["allOf"]:
-            example.update(example_from_schema(sub_schema))
+            # A subschema that carries annotations only, a lone 'description'
+            # being the common case, has no example to contribute.
+            if not _EXAMPLE_KEYWORDS & sub_schema.keys():
+                continue
+
+            sub_example = example_from_schema(sub_schema)
+
+            if not isinstance(sub_example, dict):
+                # Merging examples only makes sense for objects. If a subschema
+                # is of any other type, an instance of the composed schema is a
+                # value of that type, so the composed example is that value and
+                # there's nothing to merge it into.
+                return sub_example
+
+            example.update(sub_example)
         return example
 
     elif "enum" in schema:
