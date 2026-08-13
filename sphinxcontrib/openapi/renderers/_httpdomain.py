@@ -34,8 +34,14 @@ def _split_option(value):
     """Parse a whitespace delimited option value into a list of tokens."""
 
     # An option may be passed with no value at all, in which case docutils
-    # hands over 'None' instead of a string.
-    return (value or "").split()
+    # hands over 'None' instead of a string. Since every option parsed here
+    # takes one or more values, and since an empty one would silently turn
+    # 'response-examples-for' into "no examples at all", let's reject it. The
+    # 'ValueError' is turned into a directive error by docutils.
+    tokens = (value or "").split()
+    if not tokens:
+        raise ValueError("expected one or more whitespace delimited values")
+    return tokens
 
 
 def _iterinorder(iterable, order_by, key=lambda x: x, case_sensitive=False):
