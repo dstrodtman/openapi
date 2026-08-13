@@ -46,10 +46,14 @@ def run_sphinx(tmpdir):
     src = tmpdir.ensure('src', dir=True)
     out = tmpdir.ensure('out', dir=True)
 
-    def run(spec, options={}, directive='openapi'):
+    def run(spec, options={}, renderer=None):
         options_raw = '\n'.join([
             '   %s' % _format_option_raw(key, val)
             for key, val in options.items()])
+
+        conf_raw = ''
+        if renderer:
+            conf_raw = "openapi_default_renderer = '%s'" % renderer
 
         src.join('conf.py').write_text(
             textwrap.dedent('''
@@ -61,11 +65,11 @@ def run_sphinx(tmpdir):
                 extensions = ['sphinxcontrib.openapi']
                 source_suffix = '.rst'
                 master_doc = 'index'
-            '''),
+            ''') + conf_raw,
             encoding='utf-8')
 
         src.join('index.rst').write_text(
-            '.. %s:: %s\n%s' % (directive, spec, options_raw),
+            '.. openapi:: %s\n%s' % (spec, options_raw),
             encoding='utf-8')
 
         # Warnings are captured and returned so tests can assert on them.

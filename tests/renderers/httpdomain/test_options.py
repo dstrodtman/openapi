@@ -45,7 +45,7 @@ def test_option_is_accepted(tmpdir, run_sphinx, option, value):
     warnings = run_sphinx(
         "test-spec.yml",
         options={option: value},
-        directive="openapi:httpdomain",
+        renderer="httpdomain",
     )
 
     assert "unknown option" not in warnings
@@ -91,7 +91,7 @@ def test_response_examples_for_is_effective(tmpdir, run_sphinx):
     warnings = run_sphinx(
         "test-spec.yml",
         options={"response-examples-for": "404"},
-        directive="openapi:httpdomain",
+        renderer="httpdomain",
     )
 
     assert "unknown option" not in warnings
