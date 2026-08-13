@@ -8,6 +8,7 @@
     :license: BSD, see LICENSE for details.
 """
 
+import base64
 import copy
 
 import collections
@@ -71,7 +72,13 @@ def _json_default(value):
     if isinstance(value, (date, datetime, time)):
         return value.isoformat()
 
-    return str(value)
+    if isinstance(value, bytes):
+        # Same convention as the 'byte' format in _TYPE_MAPPING.
+        return base64.b64encode(value).decode()
+
+    LOG.warning('cannot render a %s as an example value, omitting it',
+                type(value).__name__)
+    return None
 
 
 def _dumps(value):

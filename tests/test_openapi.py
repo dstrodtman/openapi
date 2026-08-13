@@ -1757,6 +1757,39 @@ class TestOpenApi3HttpDomain(object):
         }))
         assert '"created": "2000-01-23T04:56:07"' in text
 
+    def test_example_with_binary(self):
+        renderer = renderers.HttpdomainOldRenderer(None, {'examples': True})
+        text = '\n'.join(renderer.render_restructuredtext_markup({
+            'openapi': '3.0.0',
+            'paths': {
+                '/things': {
+                    'get': {
+                        'summary': 'Get Thing',
+                        'responses': {
+                            '200': {
+                                'description': 'A thing.',
+                                'content': {
+                                    'application/json': {
+                                        'schema': {
+                                            'type': 'object',
+                                            'properties': {
+                                                'blob': {
+                                                    'type': 'string',
+                                                    'format': 'byte',
+                                                },
+                                            },
+                                            'example': {'blob': b'string'},
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        }))
+        assert '"blob": "c3RyaW5n"' in text
+
     def test_example_all_readonly_properties(self):
         renderer = renderers.HttpdomainOldRenderer(None, {'examples': True})
         text = '\n'.join(renderer.render_restructuredtext_markup({
