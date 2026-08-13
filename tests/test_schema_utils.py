@@ -243,6 +243,68 @@ from sphinxcontrib.openapi.schema_utils import example_from_schema
         pytest.param(
             {
                 "type": "object",
+                "properties": {
+                    "explicit_last": {
+                        "allOf": [
+                            {"type": "string"},
+                            {"type": "string", "example": "PENDING"},
+                        ]
+                    },
+                    "explicit_first": {
+                        "allOf": [
+                            {"type": "string", "example": "PENDING"},
+                            {"type": "string"},
+                        ]
+                    },
+                },
+            },
+            {"explicit_last": "PENDING", "explicit_first": "PENDING"},
+            id="allOf_of_non_object_prefers_explicit_example",
+        ),
+        pytest.param(
+            {
+                "type": "object",
+                "properties": {
+                    "boolean_subschema": {
+                        "allOf": [
+                            True,
+                            {
+                                "type": "object",
+                                "properties": {"one": {"type": "string"}},
+                            },
+                        ]
+                    },
+                    "only_boolean_subschema": {"allOf": [True]},
+                },
+            },
+            {"boolean_subschema": {"one": "string"}, "only_boolean_subschema": {}},
+            id="allOf_with_boolean_subschema",
+        ),
+        pytest.param(
+            # A composition of an object and a non-object cannot be satisfied,
+            # so there's no sensible example to generate. Rendering the
+            # non-object one at least keeps the type of the last word on what an
+            # instance looks like.
+            {
+                "type": "object",
+                "properties": {
+                    "unsatisfiable": {
+                        "allOf": [
+                            {
+                                "type": "object",
+                                "properties": {"one": {"type": "string"}},
+                            },
+                            {"type": "string", "example": "PENDING"},
+                        ]
+                    },
+                },
+            },
+            {"unsatisfiable": "PENDING"},
+            id="allOf_of_object_and_non_object",
+        ),
+        pytest.param(
+            {
+                "type": "object",
                 "properties": {"anything": {"description": "this can be anything"}},
             },
             {"anything": 1},
