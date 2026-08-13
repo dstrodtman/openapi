@@ -1833,7 +1833,7 @@ class TestOpenApi3HttpDomain(object):
         ''').lstrip()
 
 
-class TestOpenApi31HttpDomain(object):
+class TestOpenApi31Examples(object):
 
     def test_example_all_readonly_properties(self):
         renderer = renderers.HttpdomainOldRenderer(None, {'examples': True})
